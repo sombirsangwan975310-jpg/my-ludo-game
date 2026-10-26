@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Ludo Game</title>
+<style>
+:root{--navy:#071b3b;--panel:#102b55;--gold:#ffd45c;--red:#f04444;--green:#18b86a;--yellow:#ffc928;--blue:#2685ff}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:radial-gradient(circle at top,#164c86,#06152d 68%);color:#fff;min-height:100vh}
+button,select,input{font:inherit}button{cursor:pointer;border:0;border-radius:12px;padding:12px 16px;font-weight:700;color:#fff;background:#1678e8;box-shadow:0 4px 0 #064a9b;transition:transform .12s}button:hover{filter:brightness(1.1)}button:active{transform:translateY(2px);box-shadow:none}
+header{padding:18px 22px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #ffffff20;background:#06152dbb;position:sticky;top:0;z-index:3}
+.logo{font-size:clamp(24px,4vw,36px);font-weight:1000;letter-spacing:2px;color:#fff;text-shadow:2px 3px #0059a8}.logo span{color:var(--gold)}.tag{color:#b8d8ff;font-size:12px}
+main{max-width:1100px;margin:0 auto;padding:22px}
+.panel{background:linear-gradient(145deg,#0e2e5c,#071a38);border:1px solid #2b6bb0;border-radius:20px;box-shadow:0 18px 45px #0005;padding:22px}
+h1,h2{margin-top:0}h1{font-size:clamp(25px,4vw,38px)}h2{font-size:22px}
+.screen{display:none}.screen.active{display:block}
+.setup{text-align:center;max-width:720px;margin:20px auto}.subtitle{color:#bed8ff;line-height:1.6}.choices{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin:22px 0}.choices button{min-width:105px}.red{background:var(--red);box-shadow:0 4px 0 #9d2020}.green{background:var(--green);box-shadow:0 4px 0 #087b42}.yellow{background:var(--yellow);color:#18213a;box-shadow:0 4px 0 #a87500}.blue{background:var(--blue);box-shadow:0 4px 0 #0753ad}.purple{background:#7c4dff;box-shadow:0 4px 0 #4724a8}.wide{min-width:220px;background:linear-gradient(90deg,#00bd68,#00e18b);box-shadow:0 4px 0 #08784a}
+label{display:block;color:#c7ddff;margin:12px 0 6px}select,input{background:#06162e;color:white;border:1px solid #427bb6;border-radius:9px;padding:10px;width:100%;max-width:300px}
+.formrow{display:flex;justify-content:center;gap:18px;flex-wrap:wrap}.formrow>div{min-width:180px}
+.game-layout{display:grid;grid-template-columns:minmax(280px,650px) minmax(230px,1fr);gap:20px;align-items:start}.board-wrap{padding:10px;background:#04142a;border:2px solid #2c6db3;border-radius:18px}.board{width:100%;aspect-ratio:1;display:grid;grid-template-columns:repeat(15,1fr);grid-template-rows:repeat(15,1fr);background:#f7f8fc;border:3px solid #fff;border-radius:5px;overflow:hidden;position:relative}
+.cell{border:1px solid #d4dce8;display:flex;align-items:center;justify-content:center;position:relative;min-width:0;min-height:0}
+.cell.track{background:#fff}.cell.safe:after{content:"★";font-size:clamp(8px,1.5vw,17px);color:#aebbd0}.cell.home-red{background:#f04444}.cell.home-green{background:#18b86a}.cell.home-yellow{background:#ffc928}.cell.home-blue{background:#2685ff}
+.base{position:absolute;inset:8%;background:#fff;border-radius:16%;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:8%;padding:12%;box-shadow:inset 0 0 0 2px #ffffffa0}
+.base span{border-radius:50%;background:#f04444;border:2px solid #a52020;box-shadow:inset 0 -3px #0002}
+.base.green-base span{background:#18b86a;border-color:#087b42}.base.yellow-base span{background:#ffc928;border-color:#a87500}.base.blue-base span{background:#2685ff;border-color:#0753ad}
+.center{grid-column:7/10;grid-row:7/10;background:conic-gradient(from 0deg,var(--green) 0 25%,var(--blue) 25% 50%,var(--yellow) 50% 75%,var(--red) 75% 100%);border:2px solid white;display:flex;align-items:center;justify-content:center;font-size:clamp(12px,2vw,25px);font-weight:1000;text-shadow:1px 2px #0006}
+.token{position:absolute;width:82%;height:82%;max-width:27px;max-height:27px;border:2px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:clamp(8px,1.2vw,13px);font-weight:bold;box-shadow:0 2px 4px #0008;z-index:2;padding:0}
+.token.red{background:var(--red);box-shadow:0 2px 0 #9d2020}.token.green{background:var(--green);box-shadow:0 2px 0 #087b42}.token.yellow{background:var(--yellow);color:#17233a;box-shadow:0 2px 0 #a87500}.token.blue{background:var(--blue);box-shadow:0 2px 0 #0753ad}
+.token.selectable{outline:3px solid var(--gold);outline-offset:1px;animation:pulse 1s infinite}.token:disabled{cursor:default;filter:brightness(.92)}
+@keyframes pulse{50%{outline-offset:4px}}
+.sidebar{display:flex;flex-direction:column;gap:14px}.player-card{display:flex;align-items:center;gap:10px;background:#061a36;border:1px solid #244d7d;border-radius:12px;padding:12px}.dot{width:18px;height:18px;border-radius:50%;border:2px solid white}.player-card.current{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold)}.player-name{flex:1;font-weight:700}.status{font-size:12px;color:#b9d6ff}.dice-area{text-align:center}.dice{font-size:62px;line-height:1.2;background:#fff;color:#10264a;border-radius:16px;width:100px;margin:8px auto 16px;box-shadow:inset 0 -5px #cbd5e1}.roll-btn{width:100%;font-size:18px;background:linear-gradient(90deg,#087eff,#22a8ff)}.message{line-height:1.5;color:#d8e9ff;min-height:50px}.rules{margin-top:20px}.rules li{margin:10px 0;color:#d3e5ff;line-height:1.4}.footer-actions{display:flex;gap:10px;flex-wrap:wrap}.tiny{font-size:12px;color:#9ebde4;line-height:1.5}
+@media(max-width:760px){main{padding:12px}.game-layout{grid-template-columns:1fr}.sidebar{display:grid;grid-template-columns:1fr 1fr}.players-list{grid-column:1/-1}.panel{padding:15px}.token{font-size:9px}.dice{font-size:48px;width:78px}}
+</style>
+</head>
+<body>
+<header><div><div class="logo">LU<span>DO</span> STAR</div><div class="tag">A colourful browser board game</div></div><button class="blue" onclick="showScreen('home')">⌂ Home</button></header>
+<main>
+<section id="home" class="screen active">
+ <div class="panel setup">
+  <h1>🎲 Let's Play Ludo!</h1>
+  <p class="subtitle">Choose your players, pick a game mode, and race all four tokens to the centre. Play locally with friends or challenge computer bots.</p>
+  <h2>How many players?</h2>
+  <div class="choices">
+   <button class="blue" onclick="choosePlayers(2)">2 Players</button><button class="green" onclick="choosePlayers(3)">3 Players</button><button class="yellow" onclick="choosePlayers(4)">4 Players</button>
+  </div>
+  <div class="formrow">
+   <div><label for="mode">Game mode</label><select id="mode"><option value="local">Friends on this device</option><option value="robot">Play vs Robot</option><option value="online">Online multiplayer (setup required)</option></select></div>
+   <div><label for="bots">Robot difficulty</label><select id="bots"><option value="easy">Easy</option><option value="medium" selected>Medium</option><option value="hard">Hard</option></select></div>
+  </div>
+  <div style="margin-top:22px"><button class="wide" onclick="startGame()">Start Game ▶</button></div>
+  <p class="tiny">Online note: this standalone file supports local play and robot opponents. Real internet multiplayer needs a server or a service such as Firebase.</p>
+ </div>
+ <div class="panel rules"><h2>📜 Ludo rules</h2><ol>
+  <li><b>Players:</b> 2, 3, or 4 players. Each player has four tokens.</li>
+  <li><b>Start:</b> Roll a 6 to move a token out of your yard.</li>
+  <li><b>Move:</b> Roll the dice and move one token forward by that number.</li>
+  <li><b>Extra turn:</b> Rolling a 6 gives another roll. Capturing an opponent also gives an extra turn.</li>
+  <li><b>Capture:</b> Landing on an opponent on an unprotected square sends that token home.</li>
+  <li><b>Safe squares:</b> Star squares protect tokens from capture.</li>
+  <li><b>Finish:</b> You need an exact roll to enter the finish. First player to finish all four tokens wins.</li>
+ </ol><p class="tiny">This is a playable simplified Ludo implementation. Rule variations can differ between Ludo apps and house rules.</p></div>
+</section>
+<section id="game" class="screen">
+ <div class="game-layout">
+  <div class="board-wrap"><div id="board" class="board" aria-label="Ludo board"></div></div>
+  <aside class="sidebar">
+   <div class="panel dice-area"><div id="turnLabel"><b>Red's turn</b></div><div id="dice" class="dice">⚄</div><button id="rollButton" class="roll-btn" onclick="rollDice()">🎲 Roll Dice</button><p id="message" class="message">Roll a 6 to bring a token out.</p><div class="footer-actions"><button onclick="newGame()" class="blue">↻ Restart</button><button onclick="showScreen('home')" class="purple">Setup</button></div></div>
+   <div class="panel players-list"><h2>Players</h2><div id="playerCards"></div></div>
+   <div class="panel"><h2>How to play</h2><p class="tiny">Roll the dice, then click one of the glowing tokens to move it. If you roll a 6, you may bring a token out of the yard or move a token already on the track.</p><p class="tiny">Robot turns happen automatically. A token on a star square cannot be captured.</p></div>
+  </aside>
+ </div>
+</section>
+</main>
+<script>
+const COLORS=['red','green','yellow','blue'];
+const NAMES={red:'Red',green:'Green',yellow:'Yellow',blue:'Blue'};
+const START={red:0,green:13,yellow:26,blue:39};
+const SAFE=[0,8,13,21,26,34,39,47];
+const PATH=[
+[6,1],[6,2],[6,3],[6,4],[6,5],[5,6],[4,6],[3,6],[2,6],[1,6],[0,6],[0,7],[0,8],
+[1,8],[2,8],[3,8],[4,8],[5,8],[6,9],[6,10],[6,11],[6,12],[6,13],[6,14],[7,14],[8,14],
+[8,13],[8,12],[8,11],[8,10],[8,9],[9,8],[10,8],[11,8],[12,8],[13,8],[14,8],[14,7],[14,6],
+[13,6],[12,6],[11,6],[10,6],[9,6],[8,5],[8,4],[8,3],[8,2],[8,1],[8,0],[7,0],[6,0]
+];
+// The path follows the outside cross. Each player's home lane is separate.
+const LANES={
+ red:[[7,1],[7,2],[7,3],[7,4],[7,5],[7,6]],
+ green:[[1,7],[2,7],[3,7],[4,7],[5,7],[6,7]],
+ yellow:[[7,13],[7,12],[7,11],[7,10],[7,9],[7,8]],
+ blue:[[13,7],[12,7],[11,7],[10,7],[9,7],[8,7]]
+};
+const YARDS={
+ red:[[1,1],[1,4],[4,1],[4,4]],
+ green:[[1,10],[1,13],[4,10],[4,13]],
+ yellow:[[10,10],[10,13],[13,10],[13,13]],
+ blue:[[10,1],[10,4],[13,1],[13,4]]
+};
+let playerCount=2, mode='local', activeColors=['red','green'], current=0, diceValue=0, rolled=false, gameOver=false, players={}, boardCells={};
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active')}
+function choosePlayers(n){playerCount=n;document.querySelectorAll('.choices button').forEach(b=>b.style.outline='');event.currentTarget.style.outline='3px solid white';document.getElementById('message').textContent=n+' players selected.'}
+function initPlayers(){activeColors=playerCount===2?['red','yellow']:playerCount===3?['red','green','yellow']:['red','green','yellow','blue'];players={};activeColors.forEach((c,i)=>players[c]={color:c,name:NAMES[c],robot:mode==='robot'&&i>0,tokens:[-1,-1,-1,-1],finished:0})}
+function startGame(){mode=document.getElementById('mode').value;if(mode==='online'){alert('Online multiplayer is not connected in this single-file version. Choose Friends or Robot to play now.');return}initPlayers();current=0;diceValue=0;rolled=false;gameOver=false;showScreen('game');buildBoard();render();setMessage(mode==='robot'?'Play against the computer robots! Red goes first.':'Take turns on this device. Red goes first.');}
+function newGame(){initPlayers();current=0;diceValue=0;rolled=false;gameOver=false;buildBoard();render();setMessage('New game started. '+NAMES[activeColors[current]]+' goes first.')}
+function buildBoard(){
+ const board=document.getElementById('board');board.innerHTML='';boardCells={};
+ for(let r=0;r<15;r++)for(let c=0;c<15;c++){let el=document.createElement('div');el.className='cell';el.style.gridRow=r+1;el.style.gridColumn=c+1;el.dataset.key=r+','+c;board.appendChild(el);boardCells[r+','+c]=el}
+ // Four coloured bases
+ [['red',0,0],['green',0,9],['yellow',9,9],['blue',9,0]].forEach(([color,r,c])=>{let base=document.createElement('div');base.className='base '+color+'-base';base.style.gridRow=`${r+1}/${r+7}`;base.style.gridColumn=`${c+1}/${c+7}`;for(let i=0;i<4;i++)base.appendChild(document.createElement('span'));board.appendChild(base)});
+ // Track cells
+ PATH.forEach((p,i)=>{let el=boardCells[p[0]+','+p[1]];if(el){el.classList.add('track');if(SAFE.includes(i))el.classList.add('safe')}});
+ Object.entries(LANES).forEach(([color,lane])=>lane.forEach(p=>{let el=boardCells[p[0]+','+p[1]];if(el)el.classList.add('track','home-'+color)}));
+ // Starting squares
+ Object.entries(START).forEach(([color,idx])=>{let p=PATH[idx];if(boardCells[p[0]+','+p[1]])boardCells[p[0]+','+p[1]].classList.add('home-'+color)});
+ let center=document.createElement('div');center.className='center';center.style.gridRow='7/10';center.style.gridColumn='7/10';center.textContent='★';board.appendChild(center);
+}
+function render(){
+ document.getElementById('turnLabel').innerHTML=gameOver?'<b>Game over!</b>':`<b>${NAMES[activeColors[current]]}'s turn</b>${players[activeColors[current]]?.robot?' 🤖':''}`;
+ document.getElementById('dice').textContent=['⚀','⚁','⚂','⚃','⚄','⚅'][diceValue-1]||'🎲';
+ const cards=document.getElementById('playerCards');cards.innerHTML='';
+ activeColors.forEach((c,i)=>{let card=document.createElement('div');card.className='player-card'+(i===current&&!gameOver?' current':'');card.innerHTML=`<span class="dot" style="background:var(--${c})"></span><span class="player-name">${NAMES[c]} ${players[c].robot?'🤖':''}</span><span class="status">${players[c].finished}/4 home</span>`;cards.appendChild(card)});
+ // Clear tokens and put them back on top of bases
+ document.querySelectorAll('.token').forEach(t=>t.remove());
+ activeColors.forEach(c=>players[c].tokens.forEach((pos,i)=>{
+  let key,cell;
+  if(pos===-1){key=YARDS[c][i].join(',');cell=boardCells[key]}
+  else if(pos>=52){key=LANES[c][Math.min(5,pos-52)].join(',');cell=boardCells[key]}
+  else {let idx=(START[c]+pos)%52;let p=PATH[idx];key=p.join(',');cell=boardCells[key]}
+  if(!cell)return;
+  let token=document.createElement('button');token.className='token '+c;token.textContent=pos>=52?'★':String(i+1);token.title=NAMES[c]+' token '+(i+1);token.setAttribute('aria-label',token.title);
+  if(!gameOver&&c===activeColors[current]&&rolled&&isLegal(c,i))token.classList.add('selectable');
+  token.style.position='relative';token.style.width='80%';token.style.height='80%';token.style.maxWidth='28px';token.style.maxHeight='28px';token.style.margin='1px';
+  token.onclick=()=>moveToken(c,i);
+  // Multiple tokens share a cell; use a small flex row
+  cell.style.display='flex';cell.style.flexWrap='wrap';cell.style.alignContent='center';
+  cell.appendChild(token);
+ }));
+ document.getElementById('rollButton').disabled=gameOver||rolled||players[activeColors[current]].robot;
+ if(players[activeColors[current]]?.robot&&!gameOver) scheduleRobot();
+}
+function setMessage(s){document.getElementById('message').textContent=s}
+function isLegal(c,i){let p=players[c].tokens[i];if(p===-1)return diceValue===6;if(p>=57)return false;return p+diceValue<=57}
+function rollDice(){
+ if(gameOver||rolled||players[activeColors[current]].robot)return;
+ diceValue=Math.floor(Math.random()*6)+1;rolled=true;document.getElementById('dice').textContent=['⚀','⚁','⚂','⚃','⚄','⚅'][diceValue-1];
+ const c=activeColors[current],legal=players[c].tokens.map((_,i)=>i).filter(i=>isLegal(c,i));
+ if(!legal.length){setMessage(`${NAMES[c]} rolled ${diceValue}. No legal move.`);render();setTimeout(()=>finishTurn(false),900);return}
+ setMessage(`${NAMES[c]} rolled ${diceValue}. Click a glowing token to move.`);
+ render();
+}
+function moveToken(c,i){
+ if(gameOver||!rolled||c!==activeColors[current]||!isLegal(c,i))return;
+ let old=players[c].tokens[i];
+ if(old===-1)players[c].tokens[i]=0;else players[c].tokens[i]+=diceValue;
+ let now=players[c].tokens[i],captured=false;
+ if(now<52){
+  let abs=(START[c]+now)%52;
+  if(!SAFE.includes(abs)){
+   activeColors.filter(other=>other!==c).forEach(other=>players[other].tokens.forEach((p,j)=>{if(p>=0&&p<52&&(START[other]+p)%52===abs){players[other].tokens[j]=-1;captured=true}}));
+  }
+ }else if(now===57){players[c].finished++;setMessage(`${NAMES[c]} got a token home!`)}
+ if(players[c].tokens.every(p=>p===57)){gameOver=true;render();setMessage(`🏆 ${NAMES[c]} wins! All four tokens reached home.`);return}
+ let extra=diceValue===6||captured;
+ rolled=false;let prior=diceValue;diceValue=0;
+ if(captured)setMessage(`${NAMES[c]} captured an opponent!`);
+ else if(extra)setMessage(`${NAMES[c]} rolled a 6 and gets another turn!`);
+ else setMessage(`${NAMES[c]} moved. Next player's turn.`);
+ if(!extra)current=(current+1)%activeColors.length;
+ render();
+}
+function finishTurn(extra){rolled=false;let c=activeColors[current];if(!extra)current=(current+1)%activeColors.length;diceValue=0;render();if(!extra)setMessage(`${NAMES[c]} had no legal move. Next player's turn.`);else setMessage(`${NAMES[c]} gets another turn.`)}
+let robotTimer=null;
+function scheduleRobot(){
+ if(robotTimer)clearTimeout(robotTimer);
+ robotTimer=setTimeout(()=>{
+  if(gameOver||!players[activeColors[current]]?.robot||rolled)return;
+  diceValue=Math.floor(Math.random()*6)+1;rolled=true;
+  const c=activeColors[current],legal=players[c].tokens.map((_,i)=>i).filter(i=>isLegal(c,i));
+  if(!legal.length){setMessage(`Robot ${NAMES[c]} rolled ${diceValue}; no legal move.`);render();setTimeout(()=>finishTurn(false),850);return}
+  // Basic bot preference: capture, finish, move an active token, then release a token.
+  let ranked=legal.map(i=>{let p=players[c].tokens[i],target=p===-1?0:p+diceValue,score=0;if(p===-1)score=20;else score=10+target;if(target===57)score+=100;if(target<52){let abs=(START[c]+target)%52;if(!SAFE.includes(abs)&&activeColors.some(o=>o!==c&&players[o].tokens.some(q=>q>=0&&q<52&&(START[o]+q)%52===abs)))score+=60}return {i,score}});
+  ranked.sort((a,b)=>b.score-a.score);let chosen=ranked[0].i;
+  setMessage(`Robot ${NAMES[c]} rolled ${diceValue} and moved token ${chosen+1}.`);
+  // Execute same movement logic without human click guard
+  moveRobot(c,chosen);
+ },800);
+}
+function moveRobot(c,i){
+ let old=players[c].tokens[i];if(old===-1)players[c].tokens[i]=0;else players[c].tokens[i]+=diceValue;
+ let now=players[c].tokens[i],captured=false;
+ if(now<52){let abs=(START[c]+now)%52;if(!SAFE.includes(abs))activeColors.filter(o=>o!==c).forEach(o=>players[o].tokens.forEach((p,j)=>{if(p>=0&&p<52&&(START[o]+p)%52===abs){players[o].tokens[j]=-1;captured=true}}))}
+ if(now===57)players[c].finished++;
+ if(players[c].tokens.every(p=>p===57)){gameOver=true;rolled=false;render();setMessage(`🏆 ${NAMES[c]} wins!`);return}
+ let extra=diceValue===6||captured;rolled=false;diceValue=0;if(!extra)current=(current+1)%activeColors.length;render();setMessage(extra?`${NAMES[c]} gets another turn!`:`${NAMES[c]} moved. Next turn.`);
+}
+</script>
+</body>
+</html>
